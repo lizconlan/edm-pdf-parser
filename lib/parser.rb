@@ -15,7 +15,6 @@ class Parser
   SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|O\'[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
   SIGNATORY = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?)(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?$}
   SUPPORTERS = %r|^\s+\$\s+(\d+)$|
-  MOTIONSTART = %r|^\s+That .*$|
   NAMESWITHDRAWN = %r|^\s+NAMES WITHDRAWN$|
   
   def pdf_to_text pdf_file
@@ -170,23 +169,12 @@ class Parser
         unless @in_signatories
           @html += %Q|\n    <section class="signatures">|
           @in_signatories = true
+          @end_of_sponsors = false
         end
         @html += %Q|\n      <span class="signature">#{$1}</span>|
         @html += %Q|\n      <span class="signature">#{$2}</span>| if $2
         @html += %Q|\n      <span class="signature">#{$3}</span>| if $3
-        
-      when MOTIONSTART
-        if @in_signatories
-          @html += "\n    </section>"
-          @in_signatories = false
-        end
-        if @in_sponsors
-          @html += "\n    </section>"
-          @in_sponsors = false
-        end
-        @html += %Q|\n    <p class="motion">#{line.strip} <br />|
-        @in_para = true
-      
+              
       when NAMESWITHDRAWN
         if @in_para
           @html += "</p>"
@@ -197,7 +185,7 @@ class Parser
         @in_names_withdrawn = true
         @html += %Q|  <h4>NAMES WITHDRAWN</h4>|
         
-      else
+      else  
         if @broken_header
           @broken_header = false
           new_line = "#{@last_line}<br /> #{line.strip}"
@@ -227,13 +215,37 @@ class Parser
             end
           end
         else
-          if line.strip == ""
-            if @in_para
-              @html += "</p>"
-              @in_para = false
+          if @in_signatories
+            unless line.strip == ""
+              @html += "\n    </section>"
+              @in_signatories = false
+              @html += %Q|\n    <p class="motion">#{line.strip} <br />|
+              @in_para = true
+              @end_of_sponsors = false
+            end
+          elsif @in_sponsors
+            unless line.strip == ""
+              @html += "\n    </section>"
+              @in_sponsors = false
+              @html += %Q|\n    <p class="motion">#{line.strip} <br />|
+              @in_para = true
+              @end_of_sponsors = false
+            end
+          elsif @end_of_sponsors
+            unless line.strip == ""
+              @html += %Q|\n    <p class="motion">#{line.strip} <br />|
+              @in_para = true
+              @end_of_sponsors = false
             end
           else
-            @html += "#{line.strip} <br />"
+            if line.strip == ""
+              if @in_para
+                @html += "</p>"
+                @in_para = false
+              end
+            else
+              @html += "#{line.strip} <br />"
+            end
           end
         end  
         
