@@ -27,9 +27,14 @@ section.page {
   padding-right: 1em;
 }
 
-.sponsors, .signatures {
+.sponsors {
   display: block;
   padding-left: 3.5em;
+}
+
+.signatures {
+  display: block;
+  padding-left: 6.5em;
 }
 
 .sponsor, .signature {
