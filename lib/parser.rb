@@ -1,3 +1,5 @@
+require 'tempfile'
+
 class Parser
   TITLEHEADER = %r|^(No\.\s*\d+)\s*(\d+)$|
   LEFTFACINGHEADER = %r|^\s?(\d+)\s+Notices of Motions: \d+ [A-Z][a-z]* \d{4}\s+No.\s?\d+$|
@@ -7,6 +9,7 @@ class Parser
   HEADER1 = %r|^(Notices of Motions for which no days have been)$|
   HEADER2 = %r{^\s*(fixed)$}
   HEADER3 = %r|^\s*(\(Early Day Motions\))$|
+  INTROSTART = %r|^\s*\$\s+The figure following this symbol|
   EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s+(\d+:\d+:\d+)$|
   EDM_HEADER_START = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)|
   SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+[A-Z][a-z]+(?:\-[A-Z][a-z]+)?)$}
@@ -15,11 +18,24 @@ class Parser
   MOTIONSTART = %r|^\s+That .*$|
   NAMESWITHDRAWN = %r|^\s+NAMES WITHDRAWN$|
   
-  def pdf_to_text pdf_file, output_path
-    Kernel.system %Q|pdftotext -layout -enc UTF-8 "#{pdf_file}" "#{output_path}"|
-  end
+  def pdf_to_text pdf_file
+    pdf_txt_file = Tempfile.new("#{pdf_file.gsub('/','_')}.txt", "./")
+    pdf_txt_file.close # was open
 
-  def parse_text input_file
+    Kernel.system %Q|pdftotext -layout -enc UTF-8 "#{pdf_file}" "#{pdf_txt_file.path}"|
+
+    pdf_txt_file
+  end
+  
+  def parse pdf_file_path, output_path
+    text_file = pdf_to_text(pdf_file_path)
+    html = parse_text_file(text_file.path)
+    text_file.delete
+    
+    File.open(output_path, 'w') { |f| f.write(html) }
+  end  
+
+  def parse_text_file input_file
     @html = ""
     @doc_number = ""
     @start_column = ""
@@ -44,6 +60,8 @@ class Parser
     @broken_header = false
     @last_line = ""
     @in_names_withdrawn = false
+    @in_intro = false
+    @in_para = false
   end
       
   def handle_txt_line line
@@ -79,7 +97,12 @@ class Parser
         
       when HEADER3
         @html += %Q|#{$1}</h3>\n|
-        
+      
+      when INTROSTART
+        @in_intro = true
+        @html += %Q|<p class="intro">#{line.gsub("$", "&#x2605;")}<br />|
+        @in_para = true
+          
       when EDM_HEADER
         if @in_edm
           @html += "</p></article>"
@@ -90,8 +113,13 @@ class Parser
         @in_edm = true
         
       when EDM_HEADER_START
+        if @in_para
+          @html += "</p>"
+          @in_para = false
+        end
+        
         if @in_edm
-          @html += "</p></article>"
+          @html += "</article>"
         end
         @last_line = line.gsub("\n", "")
         @broken_header = true
@@ -116,7 +144,7 @@ class Parser
           @in_sponsors = false
           @html += "</section>"
         end
-        @html += %Q|<span class="supporters">[STAR] #{$1}</span>|
+        @html += %Q|<span class="supporters">&#x2605; #{$1}</span>|
         
       when SIGNATORY
         if @in_sponsors
@@ -137,9 +165,14 @@ class Parser
           @in_signatories = false
         end
         @html += %Q|<p class="motion">#{line.strip} <br />|
+        @in_para = true
       
       when NAMESWITHDRAWN
-        @html += "</p></article>"
+        if @in_para
+          @html += "</p>"
+          @in_para = false
+        end
+        @html += "</article>"
         @in_edm = false
         @in_names_withdrawn = true
         @html += %Q|<h4>NAMES WITHDRAWN</h4>|
@@ -154,10 +187,24 @@ class Parser
             @in_edm = true
           else
             @html += "#{@last_line.strip} <br />"
-            @html += "#{line.strip} <br />" unless line.strip == ""
+            if line.strip == ""
+              if @in_para
+                @html += "</p>"
+                @in_para = false
+              end
+            else
+              @html += "#{line.strip} <br />"
+            end
           end
         else
-          @html += "#{line.strip} <br />" unless line.strip == ""
+          if line.strip == ""
+            if @in_para
+              @html += "</p>"
+              @in_para = false
+            end
+          else
+            @html += "#{line.strip} <br />"
+          end
         end  
         
     end
