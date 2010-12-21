@@ -12,8 +12,8 @@ class Parser
   INTROSTART = %r|^\s*\$\s+The figure following this symbol|
   EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s+(\d+:\d+:\d+)$|
   EDM_HEADER_START = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)|
-  SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|O\'[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
-  SIGNATORY = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?)(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?$}
+  SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|O\'[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
+  SIGNATORY = %r{^\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?)(?:\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?(?:\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?$}
   SUPPORTERS = %r|^\s+\$\s+(\d+)$|
   NAMESWITHDRAWN = %r|^\s+NAMES WITHDRAWN$|
   
