@@ -1,0 +1,53 @@
+body {
+  width: 41em;
+  margin: 0 auto;
+}
+h1, h2, h3 {
+  text-align: center;
+}
+
+h4 {
+  width: 100%;
+}
+
+p.intro {
+  border-top: 2px solid black;
+  padding-top: 1em;
+  font-size: 104%;
+}
+
+.edm-number {
+  padding-right: 1em;
+}
+
+.sponsors, .signatures {
+  display: block;
+  padding-left: 3.5em;
+}
+
+.sponsor, .signature {
+  display: block;
+}
+
+.supporters {
+  display: block;
+  width: 100%;
+  text-align: right;
+}
+
+.edm-title {
+  font-style: italic;
+  font-weight: normal;
+}
+
+.edm-date {
+  display: block;
+  float: right;
+  padding-left: 1em;
+  text-align: right;
+}
+
+p.motion {
+  text-indent: 1em;
+  padding-left: 4.5em;
+}
