@@ -47,8 +47,8 @@ class Parser
       handle_txt_line(line)
     end
     
-    @html += "</section>"
-    @html
+    @html += "\n  </section>"
+    @html.gsub("<br /></p>", "</p>")
   end
   
   def init_vars
@@ -73,24 +73,40 @@ class Parser
         @doc_number = $1
         @start_column = $2
         @current_column = $2
-        @html += %Q|<section class="page" data-column="#{@current_column}">\n|
+        @html += %Q|<section class="page" data-column="#{@current_column}">|
         
       when LEFTFACINGHEADER
         @current_column = $1
-        @html += %Q|</section>\n<section class="page" data-column="#{@current_column}">\n|
+        if @in_para
+          @html += "</p>"
+          @in_para = false
+        end
+        if @in_edm
+          @html += "\n  </article>"
+          @in_edm = false
+        end
+        @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
     
       when RIGHTFACINGHEADER
         @current_column = $1
-        @html += %Q|</section>\n<section class="page" data-column="#{@current_column}">\n|
+        if @in_para
+          @html += "</p>"
+          @in_para = false
+        end
+        if @in_edm
+          @html += "\n  </article>"
+          @in_edm = false
+        end
+        @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
 
       when HOUSEHEADER
-        @html += %Q|<h1 class="house">#{$1}</h1>\n|
+        @html += %Q|\n  <h1 class="house">#{$1}</h1>\n|
         
       when DATEHEADER
-        @html += %Q|<h2 class="date">#{$1}</h2>\n|
+        @html += %Q|  <h2 class="date">#{$1}</h2>\n|
         
       when HEADER1
-        @html += %Q|<h3 class="header">#{$1}<br />|
+        @html += %Q|  <h3 class="header">#{$1}<br />|
         
       when HEADER2
         @html += %Q|fixed<br />|
@@ -100,16 +116,21 @@ class Parser
       
       when INTROSTART
         @in_intro = true
-        @html += %Q|<p class="intro">#{line.gsub("$", "&#x2605;")}<br />|
+        @html += %Q|  <p class="intro">#{line.gsub("$", "&#x2605;")}<br />|
         @in_para = true
           
       when EDM_HEADER
+        if @in_para
+          @html += "</p>"
+          @in_para = false
+        end
+        
         if @in_edm
-          @html += "</p></article>"
+          @html += "\n  </article>"
           init_vars()
         end
-        @html += %Q|<article class="edm">\n|
-        @html += %Q|<h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2.strip}</span> <span class="edm-date">#{$3}</span></h4>|
+        @html += %Q|\n  <article class="edm">\n|
+        @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2.strip}</span> <span class="edm-date">#{$3}</span></h4>|
         @in_edm = true
         
       when EDM_HEADER_START
@@ -119,7 +140,7 @@ class Parser
         end
         
         if @in_edm
-          @html += "</article>"
+          @html += "\n  </article>"
         end
         @last_line = line.gsub("\n", "")
         @broken_header = true
@@ -127,44 +148,48 @@ class Parser
       when SPONSOR
         if @end_of_sponsors
           unless @in_signatories
-            @html += %Q|<section class="signatures">|
+            @html += %Q|\n    <section class="signatures">|
             @in_signatories = true
           end
-          @html += %Q|<span class="signature">#{$1}</span>|
+          @html += %Q|\n      <span class="signature">#{$1}</span>|
         else
           unless @in_sponsors
-            @html += %Q|<section class="sponsors">|
+            @html += %Q|\n    <section class="sponsors">|
             @in_sponsors = true
           end
-          @html += %Q|<span class="sponsor">#{$1}</span>|
+          @html += %Q|\n      <span class="sponsor">#{$1}</span>|
         end
         
       when SUPPORTERS
         if @in_sponsors
           @in_sponsors = false
-          @html += "</section>"
+          @html += "\n    </section>"
         end
-        @html += %Q|<span class="supporters">&#x2605; #{$1}</span>|
+        @html += %Q|\n    <span class="supporters">&#x2605; #{$1}</span>|
         
       when SIGNATORY
         if @in_sponsors
-          @html += "</section>"
+          @html += "\n    </section>"
           @in_sponsors = false
         end
         unless @in_signatories
-          @html += %Q|<section class="signatures">|
+          @html += %Q|\n    <section class="signatures">|
           @in_signatories = true
         end
-        @html += %Q|<span class="signature">#{$1}</span>|
-        @html += %Q|<span class="signature">#{$2}</span>| if $2
-        @html += %Q|<span class="signature">#{$3}</span>| if $3
+        @html += %Q|\n      <span class="signature">#{$1}</span>|
+        @html += %Q|\n      <span class="signature">#{$2}</span>| if $2
+        @html += %Q|\n      <span class="signature">#{$3}</span>| if $3
         
       when MOTIONSTART
         if @in_signatories
-          @html += "</section>"
+          @html += "\n    </section>"
           @in_signatories = false
         end
-        @html += %Q|<p class="motion">#{line.strip} <br />|
+        if @in_sponsors
+          @html += "\n    </section>"
+          @in_sponsors = false
+        end
+        @html += %Q|\n    <p class="motion">#{line.strip} <br />|
         @in_para = true
       
       when NAMESWITHDRAWN
@@ -172,18 +197,18 @@ class Parser
           @html += "</p>"
           @in_para = false
         end
-        @html += "</article>"
+        @html += "\n  </article>"
         @in_edm = false
         @in_names_withdrawn = true
-        @html += %Q|<h4>NAMES WITHDRAWN</h4>|
+        @html += %Q|  <h4>NAMES WITHDRAWN</h4>|
         
       else
         if @broken_header
           @broken_header = false
           new_line = "#{@last_line} #{line.strip}"
           if new_line =~ EDM_HEADER
-            @html += %Q|<article class="edm">\n|
-            @html += %Q|<h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
+            @html += %Q|\n  <article class="edm">\n|
+            @html += %Q|  <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
             @in_edm = true
           else
             @html += "#{@last_line.strip} <br />"
