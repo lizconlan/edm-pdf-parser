@@ -10,7 +10,7 @@ class Parser
   HEADER2 = %r{^\s*(fixed)$}
   HEADER3 = %r|^\s*(\(Early Day Motions\))$|
   INTROSTART = %r|^\s*\$\s+The figure following this symbol|
-  EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s+(\d+:\d+:\d+)$|
+  EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s*(\d+:\d+:\d+)$|
   EDM_HEADER_START = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)|
   SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|O\'[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
   SIGNATORY = %r{^\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?)(?:\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?(?:\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?$}
