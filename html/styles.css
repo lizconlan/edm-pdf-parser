@@ -1,5 +1,5 @@
 body {
-  width: 41em;
+  width: 43em;
   margin: 0 auto;
 }
 h1, h2, h3 {
@@ -14,6 +14,13 @@ p.intro {
   border-top: 2px solid black;
   padding-top: 1em;
   font-size: 104%;
+}
+
+section.page {
+  display: block;
+  border: 1px solid black;
+  padding: 1em;
+  margin-top: 1em;
 }
 
 .edm-number {
