@@ -39,6 +39,7 @@ class Parser
     @doc_number = ""
     @start_column = ""
     @current_column = ""
+    @date = ""
     
     init_vars()
     
@@ -46,9 +47,11 @@ class Parser
     doc_text.each do |line|
       handle_txt_line(line)
     end
-    
-    @html += "\n  </section>"
-    @html.gsub("<br /></p>", "</p>").gsub(" </p>", "</p>")
+
+    @html_head = %Q|<!DOCTYPE html>\n<html lang="en-GB">\n<head>\n  <title>EDMS #{@date}</title>\n  <meta charset="utf-8" />\n</head>\n<body>\n|
+
+    @html += "\n</section>"
+    "#{@html_head}#{@html.gsub("<br /></p>", "</p>").gsub(" </p>", "</p>")}\n</body>\n</html>"
   end
   
   def init_vars
@@ -114,6 +117,7 @@ class Parser
         
       when DATEHEADER
         @html += %Q|  <h2 class="date">#{$1}</h2>\n|
+        @date = $1
         
       when HEADER1
         @html += %Q|  <h3 class="header">#{$1}<br />|
