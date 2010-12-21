@@ -7,6 +7,7 @@ h1, h2, h3 {
 }
 
 h4 {
+  text-align: left;
   width: 100%;
 }
 
@@ -23,10 +24,6 @@ section.page {
   margin-top: 1em;
 }
 
-.edm-number {
-  padding-right: 1em;
-}
-
 .sponsors {
   display: block;
   padding-left: 3.5em;
@@ -34,11 +31,20 @@ section.page {
 
 .signatures {
   display: block;
-  padding-left: 6.5em;
+  float: left;
+  width: 35em;
+  clear: both;
+  padding: 0.5em 0 0.5em 6.5em;
 }
 
 .sponsor, .signature {
   display: block;
+}
+
+.signature {
+  float: left;
+  padding: 0.1em 0;
+  width: 11em;
 }
 
 .supporters {
@@ -47,7 +53,16 @@ section.page {
   text-align: right;
 }
 
+.edm-number {
+  display: block;
+  float: left;
+}
+
 .edm-title {
+  position: relative;
+  display: block;
+  left: 3em;
+  text-indent: -1.5em;
   font-style: italic;
   font-weight: normal;
 }
