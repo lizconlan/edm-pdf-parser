@@ -61,6 +61,7 @@ class Parser
     @in_names_withdrawn = false
     @in_intro = false
     @in_para = false
+    @in_amendment = false
   end
       
   def handle_txt_line line
@@ -76,6 +77,10 @@ class Parser
         
       when LEFTFACINGHEADER
         @current_column = $1
+        if @in_amendment
+          @html += "</p>\n    </section>"
+          @in_amendment = false
+        end
         if @in_para
           @html += "</p>"
           @in_para = false
@@ -89,6 +94,10 @@ class Parser
     
       when RIGHTFACINGHEADER
         @current_column = $1
+        if @in_amendment
+          @html += "</p>\n    </section>"
+          @in_amendment = false
+        end
         if @in_para
           @html += "</p>"
           @in_para = false
@@ -146,6 +155,12 @@ class Parser
           end
           @html += %Q|\n      <span class="signature">#{$1}</span>|
         else
+          if @in_para
+            unless @in_amendment
+              @html += %Q|\n    <section class="amendment">|
+              @in_amendment = true
+            end
+          end
           unless @in_sponsors
             @html += %Q|\n    <section class="sponsors">|
             @in_sponsors = true
@@ -176,6 +191,10 @@ class Parser
         @html += %Q|\n      <span class="signature">#{$3}</span>| if $3
               
       when NAMESWITHDRAWN
+        if @in_amendment
+          @html += "</p>\n    </section>"
+          @in_amendment = false
+        end
         if @in_para
           @html += "</p>"
           @in_para = false
@@ -190,6 +209,10 @@ class Parser
           @broken_header = false
           new_line = "#{@last_line}<br /> #{line.strip}"
           if new_line =~ EDM_HEADER
+            if @in_amendment
+              @html += "</p>\n    </section>"
+              @in_amendment = false
+            end
             if @in_para
               @html += "</p>"
               @in_para = false
