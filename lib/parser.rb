@@ -109,7 +109,7 @@ class Parser
           init_vars()
         end
         @html += %Q|<article class="edm">\n|
-        @html += %Q|<h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
+        @html += %Q|<h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2.strip}</span> <span class="edm-date">#{$3}</span></h4>|
         @in_edm = true
         
       when EDM_HEADER_START
