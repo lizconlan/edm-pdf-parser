@@ -12,7 +12,7 @@ class Parser
   INTROSTART = %r|^\s*\$\s+The figure following this symbol|
   EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s+(\d+:\d+:\d+)$|
   EDM_HEADER_START = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)|
-  SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+[A-Z][a-z]+(?:\-[A-Z][a-z]+)?)$}
+  SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
   SIGNATORY = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?)(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?$}
   SUPPORTERS = %r|^\s+\$\s+(\d+)$|
   MOTIONSTART = %r|^\s+That .*$|
@@ -134,14 +134,6 @@ class Parser
         @in_edm = true
         
       when EDM_HEADER_START
-        if @in_para
-          @html += "</p>"
-          @in_para = false
-        end
-        
-        if @in_edm
-          @html += "\n  </article>"
-        end
         @last_line = line.gsub("\n", "")
         @broken_header = true
         
@@ -205,10 +197,19 @@ class Parser
       else
         if @broken_header
           @broken_header = false
-          new_line = "#{@last_line} #{line.strip}"
+          new_line = "#{@last_line}<br /> #{line.strip}"
           if new_line =~ EDM_HEADER
+            if @in_para
+              @html += "</p>"
+              @in_para = false
+            end
+
+            if @in_edm
+              @html += "\n  </article>"
+            end
+            
             @html += %Q|\n  <article class="edm">\n|
-            @html += %Q|  <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
+            @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
             @in_edm = true
           else
             @html += "#{@last_line.strip} <br />"
