@@ -12,7 +12,7 @@ class Parser
   INTROSTART = %r|^\s*\$\s+The figure following this symbol|
   EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s+(\d+:\d+:\d+)$|
   EDM_HEADER_START = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)|
-  SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
+  SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|O\'[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
   SIGNATORY = %r{^\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?)(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?(?:\s+((?:[A-Z][a-z]+\s)+(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?$}
   SUPPORTERS = %r|^\s+\$\s+(\d+)$|
   MOTIONSTART = %r|^\s+That .*$|
@@ -39,6 +39,7 @@ class Parser
     @html = ""
     @doc_number = ""
     @start_column = ""
+    @current_column = ""
     
     init_vars()
     
@@ -48,11 +49,10 @@ class Parser
     end
     
     @html += "\n  </section>"
-    @html.gsub("<br /></p>", "</p>")
+    @html.gsub("<br /></p>", "</p>").gsub(" </p>", "</p>")
   end
   
   def init_vars
-    @current_column = ""
     @in_edm = false
     @end_of_sponsors = false
     @in_signatories = false
@@ -84,6 +84,7 @@ class Parser
         if @in_edm
           @html += "\n  </article>"
           @in_edm = false
+          init_vars()
         end
         @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
     
@@ -96,6 +97,7 @@ class Parser
         if @in_edm
           @html += "\n  </article>"
           @in_edm = false
+          init_vars()
         end
         @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
 
@@ -155,6 +157,7 @@ class Parser
       when SUPPORTERS
         if @in_sponsors
           @in_sponsors = false
+          @end_of_sponsors = true
           @html += "\n    </section>"
         end
         @html += %Q|\n    <span class="supporters">&#x2605; #{$1}</span>|
@@ -207,6 +210,7 @@ class Parser
             if @in_edm
               @html += "\n  </article>"
             end
+            init_vars()
             
             @html += %Q|\n  <article class="edm">\n|
             @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
