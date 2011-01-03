@@ -26,7 +26,7 @@ class Parser
     pdf_txt_file
   end
   
-  def parse pdf_file_path, output_path
+  def parse pdf_file_path, output_path, kindle_friendly=false
     text_file = pdf_to_text(pdf_file_path)
     html = parse_text_file(text_file.path)
     text_file.delete
@@ -143,6 +143,8 @@ class Parser
           @html += "\n  </article>"
           init_vars()
         end
+        
+        @html += %Q|\n  <br /><br />| if kindle_friendly
         @html += %Q|\n  <article class="edm">\n|
         @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2.strip}</span> <span class="edm-date">#{$3}</span></h4>|
         @in_edm = true
@@ -154,10 +156,18 @@ class Parser
       when SPONSOR
         if @end_of_sponsors
           unless @in_signatories
-            @html += %Q|\n    <section class="signatures">|
+            if kindle_friendly
+              @html += %Q|\n    <table class="signatures">|
+            else
+              @html += %Q|\n    <section class="signatures">|
+            end
             @in_signatories = true
           end
-          @html += %Q|\n      <span class="signature">#{$1}</span>|
+          if kindle_friendly
+            @html += %Q|\n      <tr><td class="signature">#{$1}</td></tr>|
+          else
+            @html += %Q|\n      <span class="signature">#{$1}</span>|
+          end
         else
           if @in_para
             unless @in_amendment
@@ -166,33 +176,65 @@ class Parser
             end
           end
           unless @in_sponsors
-            @html += %Q|\n    <section class="sponsors">|
+            if kindle_friendly
+              @html += %Q|\n    <table class="sponsors">|
+            else
+              @html += %Q|\n    <section class="sponsors">|
+            end
             @in_sponsors = true
           end
-          @html += %Q|\n      <span class="sponsor">#{$1}</span>|
+          if kindle_friendly
+            @html += %Q|\n      <tr><td class="sponsor">#{$1}</td></tr>|
+          else
+            @html += %Q|\n      <span class="sponsor">#{$1}</span>|
+          end
         end
         
       when SUPPORTERS
         if @in_sponsors
           @in_sponsors = false
           @end_of_sponsors = true
-          @html += "\n    </section>"
+          if kindle_friendly
+            @html += "\n    </table>"
+          else
+            @html += "\n    </section>"
+          end
         end
-        @html += %Q|\n    <span class="supporters">&#x2605; #{$1}</span>|
+        if kindle_friendly
+          @html += %Q|\n    <div width="100% align="right" class="supporters">&#x2605; #{$1}</div>|
+        else
+          @html += %Q|<span class="supporters">&#x2605; #{$1}</span>|
+        end
         
       when SIGNATORY
         if @in_sponsors
-          @html += "\n    </section>"
+          if kindle_friendly
+            @html += "\n    </table>"
+          else
+            @html += "\n    </section>"
+          end
           @in_sponsors = false
         end
         unless @in_signatories
-          @html += %Q|\n    <section class="signatures">|
+          if kindle_friendly
+            @html += %Q|\n    <table class="signatures">|
+          else
+            @html += %Q|\n    <section class="signatures">|
+          end
           @in_signatories = true
           @end_of_sponsors = false
         end
-        @html += %Q|\n      <span class="signature">#{$1}</span>|
-        @html += %Q|\n      <span class="signature">#{$2}</span>| if $2
-        @html += %Q|\n      <span class="signature">#{$3}</span>| if $3
+        if kindle_friendly
+          @html += %Q|\n      <tr>|
+          @html += %Q|\n      <td width="30%" class="signature">#{$1}</td>|
+          @html += %Q|\n      <td width="30%" class="signature">#{$2}</td>| if $2
+          @html += %Q|\n      <td width="30%" class="signature">#{$3}</td>| if $3
+          @html += %Q|\n      </tr>|
+        else
+          @html += %Q|\n      <span class="signature">#{$1}</span>|
+          @html += %Q|\n      <span class="signature">#{$2}</span>| if $2
+          @html += %Q|\n      <span class="signature">#{$3}</span>| if $3
+        end
               
       when NAMESWITHDRAWN
         if @in_amendment
@@ -227,26 +269,34 @@ class Parser
             end
             init_vars()
             
+            @html += %Q|\n  <br /><br />| if kindle_friendly
             @html += %Q|\n  <article class="edm">\n|
             @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
             @in_edm = true
           else
-            @html += "#{@last_line.strip} <br />"
+            @html += "#{@last_line.strip} "
+            @html += "<br />" unless kindle_friendly
             if line.strip == ""
               if @in_para
                 @html += "</p>"
                 @in_para = false
               end
             else
-              @html += "#{line.strip} <br />"
+              @html += "#{line.strip} "
+              @html += "<br />" unless kindle_friendly
             end
           end
         else
           if @in_signatories
             unless line.strip == ""
-              @html += "\n    </section>"
+              if kindle_friendly
+                @html += "\n    </table>"
+              else
+                @html += "\n    </section>"
+              end
               @in_signatories = false
-              @html += %Q|\n    <p class="motion">#{line.strip} <br />|
+              @html += %Q|\n    <p class="motion">#{line.strip} |
+              @html += "<br />" unless kindle_friendly
               @in_para = true
               @end_of_sponsors = false
             end
@@ -254,13 +304,15 @@ class Parser
             unless line.strip == ""
               @html += "\n    </section>"
               @in_sponsors = false
-              @html += %Q|\n    <p class="motion">#{line.strip} <br />|
+              @html += %Q|\n    <p class="motion">#{line.strip} |
+              @html += "<br />" unless kindle_friendly
               @in_para = true
               @end_of_sponsors = false
             end
           elsif @end_of_sponsors
             unless line.strip == ""
-              @html += %Q|\n    <p class="motion">#{line.strip} <br />|
+              @html += %Q|\n    <p class="motion">#{line.strip} |
+              @html += "<br />" unless kindle_friendly
               @in_para = true
               @end_of_sponsors = false
             end
@@ -271,7 +323,8 @@ class Parser
                 @in_para = false
               end
             else
-              @html += "#{line.strip} <br />"
+              @html += "#{line.strip} "
+              @html += "<br />" unless kindle_friendly
             end
           end
         end  
