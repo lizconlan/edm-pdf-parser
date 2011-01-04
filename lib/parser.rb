@@ -347,6 +347,9 @@ class Parser
                 @in_para = false
               end
             else
+              if @kindle_friendly and line =~ /^\s*\[[A-Z]\]/
+                @html += "<br />"
+              end
               @html += "#{line.strip} "
               @html += "<br />" unless @kindle_friendly
             end
