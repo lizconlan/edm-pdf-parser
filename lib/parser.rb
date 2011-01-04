@@ -1,6 +1,6 @@
 require 'tempfile'
 
-class Parser
+class Parser  
   TITLEHEADER = %r|^(No\.\s*\d+)\s*(\d+)$|
   LEFTFACINGHEADER = %r|^\s?(\d+)\s+Notices of Motions: \d+ [A-Z][a-z]* \d{4}\s+No.\s?\d+$|
   RIGHTFACINGHEADER = %r|^\s?No.\s?\d+\s+Notices of Motions: \d+ [A-Z][a-z]* \d{4}\s+(\d+)$|
@@ -10,12 +10,17 @@ class Parser
   HEADER2 = %r{^\s*(fixed)$}
   HEADER3 = %r|^\s*(\(Early Day Motions\))$|
   INTROSTART = %r|^\s*\$\s+The figure following this symbol|
+  INTROP2 = %r|^\s*After an Early Day Motion \(EDM\) has been|
   EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s*(\d+:\d+:\d+)$|
   EDM_HEADER_START = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)|
   SPONSOR = %r{^\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|O\'[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?(?: \[[A-Z]\])?)$}
   SIGNATORY = %r{^\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?)(?:\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?(?:\s+((?:[A-Z][a-z]+\s)+(?:[A-Z]\.\s)*(?:Ma?c[A-Z]|[A-Z])[a-z]+(?:\-[A-Z][a-z]+)?))?$}
   SUPPORTERS = %r|^\s+\$\s+(\d+)$|
   NAMESWITHDRAWN = %r|^\s+NAMES WITHDRAWN$|
+  
+  def initialize(kindle_friendly=false)
+    @kindle_friendly = kindle_friendly
+  end
   
   def pdf_to_text pdf_file
     pdf_txt_file = Tempfile.new("#{pdf_file.gsub('/','_')}.txt", "./")
@@ -26,7 +31,7 @@ class Parser
     pdf_txt_file
   end
   
-  def parse pdf_file_path, output_path, kindle_friendly=false
+  def parse pdf_file_path, output_path
     text_file = pdf_to_text(pdf_file_path)
     html = parse_text_file(text_file.path)
     text_file.delete
@@ -130,13 +135,28 @@ class Parser
       
       when INTROSTART
         @in_intro = true
-        @html += %Q|  <p class="intro">#{line.gsub("$", "&#x2605;")}<br />|
-        @in_para = true
+        if @kindle_friendly
+          @html += %Q|  <br /><section class="intro">\n   #{line.gsub("$", "&#x2605;")} |
+        else
+          @html += %Q|  <section class="intro">\n   <p>#{line.gsub("$", "&#x2605;")}<br />|
+          @in_para = true
+        end
+        
+      when INTROP2
+        if @kindle_friendly
+          @html += %Q|    <br /><br />\n    #{line}|
+        else
+          @html += %Q|    </p>\n    <p>#{line}<br />|
+        end
           
       when EDM_HEADER
         if @in_para
           @html += "</p>"
           @in_para = false
+        end
+        if @in_intro
+          @html += "</section>"
+          @in_intro = false
         end
         
         if @in_edm
@@ -144,7 +164,7 @@ class Parser
           init_vars()
         end
         
-        @html += %Q|\n  <br /><br />| if kindle_friendly
+        @html += %Q|\n  <br /><br />| if @kindle_friendly
         @html += %Q|\n  <article class="edm">\n|
         @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2.strip}</span> <span class="edm-date">#{$3}</span></h4>|
         @in_edm = true
@@ -156,14 +176,14 @@ class Parser
       when SPONSOR
         if @end_of_sponsors
           unless @in_signatories
-            if kindle_friendly
+            if @kindle_friendly
               @html += %Q|\n    <table class="signatures">|
             else
               @html += %Q|\n    <section class="signatures">|
             end
             @in_signatories = true
           end
-          if kindle_friendly
+          if @kindle_friendly
             @html += %Q|\n      <tr><td class="signature">#{$1}</td></tr>|
           else
             @html += %Q|\n      <span class="signature">#{$1}</span>|
@@ -176,14 +196,14 @@ class Parser
             end
           end
           unless @in_sponsors
-            if kindle_friendly
+            if @kindle_friendly
               @html += %Q|\n    <table class="sponsors">|
             else
               @html += %Q|\n    <section class="sponsors">|
             end
             @in_sponsors = true
           end
-          if kindle_friendly
+          if @kindle_friendly
             @html += %Q|\n      <tr><td class="sponsor">#{$1}</td></tr>|
           else
             @html += %Q|\n      <span class="sponsor">#{$1}</span>|
@@ -194,13 +214,13 @@ class Parser
         if @in_sponsors
           @in_sponsors = false
           @end_of_sponsors = true
-          if kindle_friendly
+          if @kindle_friendly
             @html += "\n    </table>"
           else
             @html += "\n    </section>"
           end
         end
-        if kindle_friendly
+        if @kindle_friendly
           @html += %Q|\n    <div width="100% align="right" class="supporters">&#x2605; #{$1}</div>|
         else
           @html += %Q|<span class="supporters">&#x2605; #{$1}</span>|
@@ -208,7 +228,7 @@ class Parser
         
       when SIGNATORY
         if @in_sponsors
-          if kindle_friendly
+          if @kindle_friendly
             @html += "\n    </table>"
           else
             @html += "\n    </section>"
@@ -216,7 +236,7 @@ class Parser
           @in_sponsors = false
         end
         unless @in_signatories
-          if kindle_friendly
+          if @kindle_friendly
             @html += %Q|\n    <table class="signatures">|
           else
             @html += %Q|\n    <section class="signatures">|
@@ -224,7 +244,7 @@ class Parser
           @in_signatories = true
           @end_of_sponsors = false
         end
-        if kindle_friendly
+        if @kindle_friendly
           @html += %Q|\n      <tr>|
           @html += %Q|\n      <td width="30%" class="signature">#{$1}</td>|
           @html += %Q|\n      <td width="30%" class="signature">#{$2}</td>| if $2
@@ -248,6 +268,7 @@ class Parser
         @html += "\n  </article>"
         @in_edm = false
         @in_names_withdrawn = true
+        @html += %Q|  <br /><br />| if @kindle_friendly
         @html += %Q|  <h4>NAMES WITHDRAWN</h4>|
         
       else  
@@ -269,13 +290,13 @@ class Parser
             end
             init_vars()
             
-            @html += %Q|\n  <br /><br />| if kindle_friendly
+            @html += %Q|\n  <br /><br />| if @kindle_friendly
             @html += %Q|\n  <article class="edm">\n|
             @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
             @in_edm = true
           else
             @html += "#{@last_line.strip} "
-            @html += "<br />" unless kindle_friendly
+            @html += "<br />" unless @kindle_friendly
             if line.strip == ""
               if @in_para
                 @html += "</p>"
@@ -283,20 +304,20 @@ class Parser
               end
             else
               @html += "#{line.strip} "
-              @html += "<br />" unless kindle_friendly
+              @html += "<br />" unless @kindle_friendly
             end
           end
         else
           if @in_signatories
             unless line.strip == ""
-              if kindle_friendly
+              if @kindle_friendly
                 @html += "\n    </table>"
               else
                 @html += "\n    </section>"
               end
               @in_signatories = false
               @html += %Q|\n    <p class="motion">#{line.strip} |
-              @html += "<br />" unless kindle_friendly
+              @html += "<br />" unless @kindle_friendly
               @in_para = true
               @end_of_sponsors = false
             end
@@ -305,14 +326,14 @@ class Parser
               @html += "\n    </section>"
               @in_sponsors = false
               @html += %Q|\n    <p class="motion">#{line.strip} |
-              @html += "<br />" unless kindle_friendly
+              @html += "<br />" unless @kindle_friendly
               @in_para = true
               @end_of_sponsors = false
             end
           elsif @end_of_sponsors
             unless line.strip == ""
               @html += %Q|\n    <p class="motion">#{line.strip} |
-              @html += "<br />" unless kindle_friendly
+              @html += "<br />" unless @kindle_friendly
               @in_para = true
               @end_of_sponsors = false
             end
@@ -324,7 +345,7 @@ class Parser
               end
             else
               @html += "#{line.strip} "
-              @html += "<br />" unless kindle_friendly
+              @html += "<br />" unless @kindle_friendly
             end
           end
         end  
