@@ -52,8 +52,10 @@ class Parser
     doc_text.each do |line|
       handle_txt_line(line)
     end
-
-    @html_head = %Q|<!DOCTYPE html>\n<html lang="en-GB">\n<head>\n  <title>EDMs #{@date}</title>\n  <meta charset="utf-8" />\n  <link rel="stylesheet" type="text/css" href="styles.css" />\n</head>\n<body>\n|
+    
+    @html_head = %Q|<!DOCTYPE html>\n<html lang="en-GB">\n<head>\n  <title>EDMs #{@date}</title>\n  <meta charset="utf-8" />|
+    @html_head += %Q|\n  <link rel="stylesheet" type="text/css" href="styles.css" />|
+    @html_head += %Q|\n</head>\n<body>\n|
 
     @html += "\n</section>"
     "#{@html_head}#{@html.gsub("<br /></p>", "</p>").gsub(" </p>", "</p>")}\n</body>\n</html>"
@@ -125,7 +127,8 @@ class Parser
         @date = $1
         
       when HEADER1
-        @html += %Q|  <h3 class="header">#{$1}<br />|
+        @html += %Q|  <h3 class="header">#{$1} |
+        @html += %Q|<br />| unless @kindle_friendly
         
       when HEADER2
         @html += %Q|fixed<br />|
