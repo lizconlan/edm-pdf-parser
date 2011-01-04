@@ -11,7 +11,7 @@ h4 {
   width: 100%;
 }
 
-p.intro {
+section.intro {
   border-top: 2px solid black;
   padding-top: 1em;
   font-size: 104%;
@@ -26,7 +26,7 @@ section.page {
 
 .sponsors {
   display: block;
-  padding-left: 3.5em;
+  padding-left: 3em;
 }
 
 .signatures {
@@ -61,7 +61,7 @@ section.page {
 .edm-title {
   position: relative;
   display: block;
-  left: 3em;
+  left: 2.5em;
   width: 34em;
   text-indent: -1.5em;
   font-style: italic;
@@ -80,5 +80,5 @@ section.page {
 
 p.motion {
   text-indent: 1em;
-  padding-left: 4.5em;
+  padding-left: 4em;
 }
