@@ -76,6 +76,7 @@ class Parser
       
   def handle_txt_line line
     line.gsub!("ﬁ", "fi")
+    line.gsub!("ﬂ", "fl")
     line.gsub!("’", "'")
     
     case line
