@@ -78,6 +78,7 @@ class Parser
     line.gsub!("ﬁ", "fi")
     line.gsub!("ﬂ", "fl")
     line.gsub!("’", "'")
+    line.gsub!("‘", "'")
     
     case line
       when TITLEHEADER
@@ -225,7 +226,7 @@ class Parser
           end
         end
         if @kindle_friendly
-          @html += %Q|\n    <div width="100% align="right" class="supporters">&#x2605; #{$1}</div>|
+          @html += %Q|\n    <div width="100%" align="right" class="supporters">&#x2605; #{$1}</div>|
         else
           @html += %Q|<span class="supporters">&#x2605; #{$1}</span>|
         end
@@ -295,6 +296,7 @@ class Parser
             init_vars()
             
             @html += %Q|\n  <br /><br />| if @kindle_friendly
+            @html.gsub!("£", "&#163;") if @kindle_friendly
             @html += %Q|\n  <article class="edm">\n|
             @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
             @in_edm = true
