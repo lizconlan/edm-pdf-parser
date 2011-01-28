@@ -12,7 +12,7 @@ task :pdf_to_html do
     p = Parser.new()
     p.parse pdf_file, html
   else
-    puts 'USAGE: rake fymp:pdf_to_html pdf=pdfs/test.pdf output=html/output.html'
+    puts 'USAGE: rake pdf_to_html pdf=pdfs/test.pdf output=html/output.html'
   end
 end
 
@@ -25,7 +25,7 @@ task :pdf_to_kindle_html do
     p = Parser.new(true)
     p.parse pdf_file, html
   else
-    puts 'USAGE: rake fymp:pdf_to_kindle_html pdf=pdfs/test.pdf output=html/output.html'
+    puts 'USAGE: rake pdf_to_kindle_html pdf=pdfs/test.pdf output=html/output.html'
   end
 end
 
@@ -41,6 +41,6 @@ task :pdf_to_mobi do
     `kindlegen #{html}`    
     `mv #{mobi} #{mobi.gsub("/html/", "/mobi/")}`
   else
-    puts 'USAGE: rake fymp:pdf_to_mobi pdf=pdfs/test.pdf output=html/output.mobi'
+    puts 'USAGE: rake pdf_to_mobi pdf=pdfs/test.pdf output=html/output.mobi'
   end
 end

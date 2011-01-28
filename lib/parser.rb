@@ -8,7 +8,7 @@ class Parser
   DATEHEADER = %r|^\s*([A-Z][a-z]+day \d+ [A-Z][a-z]+ \d{4})$|
   HEADER1 = %r|^(Notices of Motions for which no days have been)$|
   HEADER2 = %r{^\s*(fixed)$}
-  HEADER3 = %r|^\s*(\(Early Day Motions\))$|
+  HEADER3 = %r|^\s*(\('?Early Day Motions'?\))$|
   INTROSTART = %r|^\s*\$\s+The figure following this symbol|
   INTROP2 = %r|^\s*After an Early Day Motion \(EDM\) has been|
   EDM_HEADER = %r|^\s*(\d+)\s+((?:[^\s]+\s)+)\s*(\d+:\d+:\d+)$|
