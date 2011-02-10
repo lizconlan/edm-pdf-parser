@@ -93,6 +93,10 @@ p.motion {
 
 /*order book*/
 
+table.question {
+  width: 580px;
+}
+
 table td {
   font-size: 100%;
 }
@@ -105,6 +109,12 @@ td.col1 {
   width: 2em;
 }
 
+td.col2 p {
+  padding: 0;
+  margin: 0 0 0 0.9em;
+  text-indent: -0.9em;
+  text-align: justify;
+}
 
 article.question {
   display: block;
@@ -116,13 +126,13 @@ article.question {
 } 
 
 span.question {
-  margin-left : 0.5em; 
+  /*margin-left : 0.5em; */
 }
 
 span.marker {
-  margin-left: -2.3em;
-  margin-right: 1.2em;
+  display: block;
   font-weight: bold;
+  clear: both;
 }
 
 span.question-number {
