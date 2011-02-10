@@ -21,7 +21,7 @@ task :pdf_to_html do
       else
         raise "unrecognised type"
     end
-    p.parse pdf_file, html
+    p.parse pdf_file, html, type
   else
     puts 'USAGE: rake pdf_to_html pdf=pdfs/test.pdf output=html/output.html'
   end
