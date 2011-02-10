@@ -4,14 +4,23 @@ require 'rubygems'
 
 require 'models/parser'
 require 'models/edm_parser'
+require 'models/order_book_parser'
 
 desc "Convert PDF to web-ready HTML"
 task :pdf_to_html do
   pdf_file = ENV['pdf']
   html = ENV['output']
+  type = ENV['type']
   
-  if pdf_file and html
-    p = Parser.new()
+  if pdf_file and html and type
+    case type.downcase
+      when "edm"
+        p = EdmParser.new()
+      when "orderbook"
+        p = OrderBookParser.new()
+      else
+        raise "unrecognised type"
+    end
     p.parse pdf_file, html
   else
     puts 'USAGE: rake pdf_to_html pdf=pdfs/test.pdf output=html/output.html'
@@ -22,10 +31,20 @@ desc "Convert PDF to Kindle-ready HTML"
 task :pdf_to_kindle_html do
   pdf_file = ENV['pdf']
   html = ENV['output']
+  type = ENV['type']
   
-  if pdf_file and html
-    p = Parser.new(true)
+  if pdf_file and html and type
+    case type.downcase
+      when "edm"
+        p = EdmParser.new(true)
+      when "orderbook"
+        p = OrderBookParser.new(true)
+      else
+        raise "unrecognised type"
+    end
     p.parse pdf_file, html
+    `kindlegen #{html}`    
+    `mv #{mobi} #{mobi.gsub("/html/", "/mobi/")}`
   else
     puts 'USAGE: rake pdf_to_kindle_html pdf=pdfs/test.pdf output=html/output.html'
   end
@@ -43,7 +62,7 @@ task :pdf_to_mobi do
       when "edm"
         p = EdmParser.new(true)
       when "orderbook"
-        p = EdmParser.new(true)
+        p = OrderBookParser.new(true)
       else
         raise "unrecognised type"
     end
