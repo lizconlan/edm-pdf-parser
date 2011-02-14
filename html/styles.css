@@ -94,7 +94,7 @@ p.motion {
 /*order book*/
 
 table.question {
-  width: 580px;
+  width: 590px;
 }
 
 table td {
@@ -109,7 +109,13 @@ td.col1 {
   width: 2em;
 }
 
-td.col2 p {
+td.col2 {
+  padding: 0;
+  margin: 0;
+  width: 540px;
+}
+
+td.col2>div {
   padding: 0;
   margin: 0 0 0 0.9em;
   text-indent: -0.9em;
@@ -135,7 +141,8 @@ span.marker {
   clear: both;
 }
 
-span.question-number {
+div.footnotes {
+  display: inline;
   float: right;
   font-size: 80%;
 }
