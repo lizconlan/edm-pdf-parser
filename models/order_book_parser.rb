@@ -27,6 +27,7 @@ class OrderBookParser < Parser
     @in_para = false
     @current_page = 0
     @current_order_num = 0
+    @transferred = false
   end
   
   def parse_text_file input_file, type
@@ -130,22 +131,34 @@ class OrderBookParser < Parser
         
         @html += %Q|      <table class="question">\n|
         @html += %Q|        <tr>\n|
-        @html += %Q|          <td class="col1"><span class="order_number">#{$1}</span></td>|
-        @html += %Q|          <td class="col2"><p><span class="member">#{$2}</span>|
-        @html += %Q|(<span class="constituency">#{$3}</span>): |
-        @html += %Q|<span class="question">#{$4}<br />|
+        @html += %Q|          <td class="col1"><span class="order_number">#{$1}</span></td>\n|
+        @html += %Q|          <td class="col2">\n            <div>\n              <span class="member">#{$2}</span>\n|
+        @html += %Q|              (<span class="constituency">#{$3}</span>): \n|
+        @html += %Q|              <span class="question">#{$4}|
         @current_order_num = $1
         @in_question = true
         
       when QUESTIONNUMBER
         question_num = $1
         rest_of_question = line.gsub(question_num, "").strip
-        unless rest_of_question == ""
-          @html += "#{rest_of_question}<br />"
+        if rest_of_question and rest_of_question =~ /\[Transferred\]\s*$/
+          rest_of_question = rest_of_question.gsub("[Transferred]", "")
+          @transferred = true
         end
-        @html += %Q|</span>\n          <span class="question-number">#{question_num}</span>\n|
-        @html += %Q|        </p></td>|
-        @html += %Q|      </tr>|
+        unless rest_of_question == ""
+          @html += "#{rest_of_question.rstrip}<br />"
+        end
+        @html += %Q|</span>\n|
+        @html += %Q|              <div class="footnotes">\n|
+        if @transferred
+          @html += %Q|              <span class="transferred">[Transferred]</span>\n|
+          @transferred = false
+        end
+        @html += %Q|                <span class="question-number">#{question_num}</span>\n|
+        @html += %Q|               </div>\n|
+        @html += %Q|             </div>\n|
+        @html += %Q|          </td>\n|
+        @html += %Q|      </tr>\n|
         @html += %Q|    </table>|
         @html += %Q|  </article>|
         @in_question = false
@@ -165,8 +178,7 @@ class OrderBookParser < Parser
           if @kindle_friendly and line =~ /^\s*\[[A-Z]\]/
             @html += "<br />"
           end
-          @html += "#{line.strip} "
-          @html += "<br />" unless @kindle_friendly
+          @html += "                #{line.strip} \n"
         end
       end
     
