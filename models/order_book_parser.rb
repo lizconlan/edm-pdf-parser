@@ -134,7 +134,7 @@ class OrderBookParser < Parser
         @html += %Q|          <td class="col1"><span class="order_number">#{$1}</span></td>\n|
         @html += %Q|          <td class="col2">\n            <div>\n              <span class="member">#{$2}</span>\n|
         @html += %Q|              (<span class="constituency">#{$3}</span>): \n|
-        @html += %Q|              <span class="question">#{$4}|
+        @html += %Q|              <span class="question">#{$4}\n|
         @current_order_num = $1
         @in_question = true
         
@@ -146,7 +146,7 @@ class OrderBookParser < Parser
           @transferred = true
         end
         unless rest_of_question == ""
-          @html += "#{rest_of_question.rstrip}<br />"
+          @html += "                #{rest_of_question.rstrip}"
         end
         @html += %Q|</span>\n|
         @html += %Q|              <div class="footnotes">\n|

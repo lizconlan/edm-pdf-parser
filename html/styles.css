@@ -132,7 +132,7 @@ article.question {
 } 
 
 span.question {
-  /*margin-left : 0.5em; */
+  margin: 0 1em;
 }
 
 span.marker {
@@ -144,5 +144,6 @@ span.marker {
 div.footnotes {
   display: inline;
   float: right;
+  padding-left: 1em;
   font-size: 80%;
 }
