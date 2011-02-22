@@ -133,18 +133,10 @@ class EdmParser < Parser
       when SPONSOR
         if @end_of_sponsors
           unless @in_signatories
-            if @kindle_friendly
-              @html += %Q|\n    <table class="signatures">|
-            else
-              @html += %Q|\n    <section class="signatures">|
-            end
+            @html += %Q|\n    <section class="signatures">|
             @in_signatories = true
           end
-          if @kindle_friendly
-            @html += %Q|\n      <tr><td class="signature">#{$1}</td></tr>|
-          else
-            @html += %Q|\n      <span class="signature">#{$1}</span>|
-          end
+          @html += %Q|\n      <span class="signature">#{$1}</span>|
         else
           if @in_para
             unless @in_amendment
@@ -153,64 +145,45 @@ class EdmParser < Parser
             end
           end
           unless @in_sponsors
-            if @kindle_friendly
-              @html += %Q|\n    <table class="sponsors">|
-            else
-              @html += %Q|\n    <section class="sponsors">|
-            end
+            @html += %Q|\n    <section class="sponsors">|
+            @html += "<br>" if @kindle_friendly
             @in_sponsors = true
           end
-          if @kindle_friendly
-            @html += %Q|\n      <tr><td class="sponsor">#{$1}</td></tr>|
-          else
-            @html += %Q|\n      <span class="sponsor">#{$1}</span>|
-          end
+          @html += %Q|\n      <span class="sponsor">#{$1}</span>|
+          @html += "<br>" if @kindle_friendly
         end
         
       when SUPPORTERS
         if @in_sponsors
           @in_sponsors = false
           @end_of_sponsors = true
-          if @kindle_friendly
-            @html += "\n    </table>"
-          else
-            @html += "\n    </section>"
-          end
+          @html += "\n    </section>"
         end
         if @kindle_friendly
-          @html += %Q|\n    <div width="100%" align="right" class="supporters">&#x2605; #{$1}</div>|
+          @html += %Q|<div class="supporters" width="100%" style="display: block; text-align: right">&#x2605; #{$1}</div>|
         else
           @html += %Q|<span class="supporters">&#x2605; #{$1}</span>|
         end
         
       when SIGNATORY
         if @in_sponsors
-          if @kindle_friendly
-            @html += "\n    </table>"
-          else
-            @html += "\n    </section>"
-          end
+          @html += "\n    </section>"
           @in_sponsors = false
         end
         unless @in_signatories
-          if @kindle_friendly
-            @html += %Q|\n    <table class="signatures">|
-          else
-            @html += %Q|\n    <section class="signatures">|
-          end
+          @html += %Q|\n    <section class="signatures">|
           @in_signatories = true
           @end_of_sponsors = false
         end
-        if @kindle_friendly
-          @html += %Q|\n      <tr>|
-          @html += %Q|\n      <td width="30%" class="signature">#{$1}</td>|
-          @html += %Q|\n      <td width="30%" class="signature">#{$2}</td>| if $2
-          @html += %Q|\n      <td width="30%" class="signature">#{$3}</td>| if $3
-          @html += %Q|\n      </tr>|
-        else
-          @html += %Q|\n      <span class="signature">#{$1}</span>|
-          @html += %Q|\n      <span class="signature">#{$2}</span>| if $2
-          @html += %Q|\n      <span class="signature">#{$3}</span>| if $3
+        @html += %Q|\n      <span class="signature">#{$1}</span>|
+        @html += "<br>" if @kindle_friendly
+        if $2
+          @html += %Q|\n      <span class="signature">#{$2}</span>|
+          @html += "<br>" if @kindle_friendly
+        end
+        if $3
+          @html += %Q|\n      <span class="signature">#{$3}</span>|
+          @html += "<br>" if @kindle_friendly
         end
               
       when NAMESWITHDRAWN
