@@ -44,8 +44,10 @@ class Parser
     end
     
     @html_head = %Q|<!DOCTYPE html>\n<html lang="en-GB">\n<head>\n  <title>#{title} #{@date}</title>\n  <meta charset="utf-8" />|
-    @html_head += %Q|\n  <link rel="stylesheet" type="text/css" href="styles.css" media="screen"/>|
-    @html_head += %Q|\n  <link rel="stylesheet" type="text/css" href="print.css" media="print"/>|
+    unless @kindle_friendlu
+      @html_head += %Q|\n  <link rel="stylesheet" type="text/css" href="styles.css" media="screen"/>|
+      @html_head += %Q|\n  <link rel="stylesheet" type="text/css" href="print.css" media="print"/>|
+    end
     @html_head += %Q|\n</head>\n<body>\n|
 
     @html += "\n</section>"
