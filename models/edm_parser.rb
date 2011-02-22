@@ -37,12 +37,15 @@ class EdmParser < Parser
         @doc_number = $1
         @start_column = $2
         @current_column = $2
-        @html += %Q|<section class="page" data-column="#{@current_column}">|
+        unless @kindle_friendly
+          @html += %Q|<section class="page" data-column="#{@current_column}">|
+        end
         
       when LEFTFACINGHEADER
         @current_column = $1
         if @in_amendment
           @html += "</p>\n    </section>"
+          @in_para = false
           @in_amendment = false
         end
         if @in_para
@@ -54,12 +57,15 @@ class EdmParser < Parser
           @in_edm = false
           init_vars()
         end
-        @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
+        unless @kindle_friendly
+          @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
+        end
     
       when RIGHTFACINGHEADER
         @current_column = $1
         if @in_amendment
           @html += "</p>\n    </section>"
+          @in_para = false
           @in_amendment = false
         end
         if @in_para
@@ -71,7 +77,9 @@ class EdmParser < Parser
           @in_edm = false
           init_vars()
         end
-        @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
+        unless @kindle_friendly
+          @html += %Q|\n</section>\n<section class="page" data-column="#{@current_column}">|
+        end
 
       when HOUSEHEADER
         @html += %Q|\n  <h1 class="house">#{$1}</h1>\n|
@@ -189,6 +197,7 @@ class EdmParser < Parser
       when NAMESWITHDRAWN
         if @in_amendment
           @html += "</p>\n    </section>"
+          @in_para = false
           @in_amendment = false
         end
         if @in_para
@@ -206,8 +215,12 @@ class EdmParser < Parser
           @broken_header = false
           new_line = "#{@last_line}<br /> #{line.strip}"
           if new_line =~ EDM_HEADER
+            number = $1
+            title = $2
+            date = $3
             if @in_amendment
               @html += "</p>\n    </section>"
+              @in_para = false
               @in_amendment = false
             end
             if @in_para
@@ -223,7 +236,7 @@ class EdmParser < Parser
             @html += %Q|\n  <br /><br />| if @kindle_friendly
             @html.gsub!("£", "&#163;") if @kindle_friendly
             @html += %Q|\n  <article class="edm">\n|
-            @html += %Q|    <h4><span class="edm-number">#{$1}</span> <span class="edm-title">#{$2}</span> <span class="edm-date">#{$3}</span></h4>|
+            @html += %Q|    <h4><span class="edm-number">#{number}</span> <span class="edm-title">#{title}</span> <span class="edm-date">#{date}</span></h4>|
             @in_edm = true
           else
             @html += "#{@last_line.strip} "
@@ -241,11 +254,7 @@ class EdmParser < Parser
         else
           if @in_signatories
             unless line.strip == ""
-              if @kindle_friendly
-                @html += "\n    </table>"
-              else
-                @html += "\n    </section>"
-              end
+              @html += "\n    </section>"
               @in_signatories = false
               @html += %Q|\n    <p class="motion">#{line.strip} |
               @html += "<br />" unless @kindle_friendly
